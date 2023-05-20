@@ -1,14 +1,22 @@
 import Main from "./Main";
+import somethingIsWrong from "../images/something-wrong.png"
+import something from "../images/Union (1).png";
 import React, {useState, useEffect} from "react";
 import {Routes, Route, Navigate, useNavigate, useLocation} from "react-router-dom";
 import {api} from "../utils/Api";
 import {CurrentUserContext} from "../contexts/CurrentUserContext";
 import Login from "./pages/Login";
-import { ProtectedRoute } from "./ProtectedRoute";
+import {ProtectedRoute} from "./ProtectedRoute";
 import Register from "./pages/Register";
 import PageNotFound from "./pages/PageNotFound";
 import * as mestoAuth from "../utils/mestoAuth";
 import Header from "./Header";
+import EditProfilePopup from "./EditProfilePopup";
+import EditAvatarPopup from "./EditAvatarPopup";
+import AddPlacePopup from "./AddPlacePopup";
+import DeletePlacePopup from "./DeletePlacePopup";
+import ImagePopup from "./ImagePopup";
+import InfoTooltip from "./InfoTooltip";
 
 
 function App() {
@@ -17,6 +25,11 @@ function App() {
    const [isAddPlacePopupOpen, setIsAddPlacePopupOpen] = useState(false);
    const [isImagePopupOpen, setIsImagePopupOpen] = useState(false);
    const [isDeleteCardPopupOpen, setDeleteCardPopupOpen] = useState(false);
+   const [isInfoTooltip, setIsInfoTooltip] = useState(false)
+   const [popupRegister, setPopupRegister] = useState({
+      textPopup: '',
+      imagePopup: ''
+   })
    const [loggedIn, setLoggedIn] = useState(false);
    const [currentIdCard, setCurrentIdCard] = useState("");
    const [selectedCard, setSelectedCard] = useState({});
@@ -26,7 +39,6 @@ function App() {
    const navigate = useNavigate()
    let location = useLocation();
 
-   console.log(userData)
    useEffect(() => {
       api.getUserInformation()
       .then((data) => {
@@ -35,11 +47,59 @@ function App() {
       .catch((err) => alert(err));
    }, []);
 
-   if (loggedIn){
-      if (location.pathname === '/sign-up' || location.pathname === '/sign-in'){
-         navigate('/main')
-         console.log(location.pathname)
+   useEffect(() => {
+      if (loggedIn) {
+         if (location.pathname === '/sign-up' || location.pathname === '/sign-in') {
+            navigate('/main')
+         }
       }
+   }, [loggedIn, navigate])
+
+   function authorize(email, password) {
+      mestoAuth.authorize(email, password)
+      .then((data) => {
+         if (data.token) {
+            localStorage.setItem('jwt', data.token)
+            handleLogin();
+            navigate('/main')
+            tokenCheck()
+         }
+      })
+      .catch((err) => {
+         if (err === 'Ошибка 401') {
+            setPopupRegister({
+               textPopup: `${err} Что-то пошло не так! пользователь с email не найден или неправильный пароль.`,
+               imagePopup: somethingIsWrong
+            })
+            setIsInfoTooltip(true)
+         }
+         if (err === 'Ошибка 400') {
+            setPopupRegister({
+               textPopup: `${err} Что-то пошло не так! Поля не заполнены.`,
+               imagePopup: somethingIsWrong
+            })
+            setIsInfoTooltip(true)
+         }
+      });
+   }
+
+   function register(email, password) {
+      mestoAuth.register(email, password)
+      .then(() => {
+         setPopupRegister({
+            textPopup: `Вы успешно зарегистрировались!`,
+            imagePopup: something
+         })
+         setIsInfoTooltip(true)
+         setTimeout(navigate, 3000, '/sign-in')
+      })
+      .catch((err) => {
+         setPopupRegister({
+            textPopup: `${err} Что-то пошло не так! Возможно у вас уже есть аккаунт. Попробуйте ещё раз.`,
+            imagePopup: somethingIsWrong
+         })
+         setIsInfoTooltip(true)
+      });
    }
 
    function tokenCheck() {
@@ -146,44 +206,66 @@ function App() {
       setIsAddPlacePopupOpen(false);
       setIsImagePopupOpen(false);
       setDeleteCardPopupOpen(false)
+      setIsInfoTooltip(false)
    }
 
    return (
    <CurrentUserContext.Provider value={currentUser}>
       <div className="body">
          <div className="page">
-         <Header userData={userData} asdasd={setLoggedIn}/>
+            <Header userData={userData} asdasd={setLoggedIn}/>
+            <Routes>
+               <Route path="/main" element={<ProtectedRoute
+               element={Main}
+               onEditAvatar={handleEditAvatarClick}
+               onEditProfile={handleEditProfileClick}
+               onAddPlace={handleAddPlaceClick}
+               handleClick={handleCardClick}
+               onCardLike={handleCardLike}
+               onCardDelete={DeleteCardClick}
+               card={currentCard}
+               loggedIn={loggedIn}
+               />}
+               />
+               <Route path="/sign-in" element={<Login authorize={authorize}/> }/>
+               <Route path="/sign-up" element={<Register popupRegister={setPopupRegister} isInfoTooltip={setIsInfoTooltip} register={register}/>}/>
+               <Route path="*" element={<PageNotFound/>}/>
+               <Route path="/" element={loggedIn ? <Navigate to='/main'/> : <Navigate to='/sign-in'/>}/>
+            </Routes>
          </div>
-         <Routes>
-            <Route path="/main" element={<ProtectedRoute
-            element={Main}
-            onEditAvatar={handleEditAvatarClick}
-            onEditProfile={handleEditProfileClick}
-            onAddPlace={handleAddPlaceClick}
-            handleClick={handleCardClick}
-            onCardLike={handleCardLike}
-            onCardDelete={DeleteCardClick}
-            card={currentCard}
-            isOpenEditProfile={isEditProfilePopupOpen}
-            isOpenEditAvatar={isEditAvatarPopupOpen}
-            isOpenAddPlace={isAddPlacePopupOpen}
-            isOpenDeletePlace={isDeleteCardPopupOpen}
-            isOpenImagePopup={isImagePopupOpen}
-            onUpdateAvatarEditAvatar={handleUpdateAvatar}
-            onUpdateCardAddPlace={handleUpdateCard}
-            onCardDeleteDeletePlace={handleCardDelete}
-            idCardDeletePlace={currentIdCard}
-            cardImagePopup={selectedCard}
-            onClosePopup={closeAllPopups}
-            onUpdateUserEditProfile={handleUpdateUser}
-            loggedIn={loggedIn}
-            userData={userData}/>}
-            />
-            <Route path="/sign-in" element={<Login handleLogin={handleLogin} aaaa={tokenCheck}/>} />
-            <Route path="/sign-up" element={<Register />} />
-            <Route path="*" element={<PageNotFound />} />
-            <Route path="/" element={loggedIn ? <Navigate to='/main' /> : <Navigate to='/sign-in' />} />
-         </Routes>
+
+         <EditProfilePopup
+         isOpen={isEditProfilePopupOpen}
+         onClose={closeAllPopups}
+         onUpdateUser={handleUpdateUser}
+         />
+         <EditAvatarPopup
+         isOpen={isEditAvatarPopupOpen}
+         onClose={closeAllPopups}
+         onUpdateAvatar={handleUpdateAvatar}
+         />
+         <AddPlacePopup
+         isOpen={isAddPlacePopupOpen}
+         onClose={closeAllPopups}
+         onUpdateCard={handleUpdateCard}
+         />
+         <DeletePlacePopup
+         isOpen={isDeleteCardPopupOpen}
+         onClose={closeAllPopups}
+         onCardDelet={handleCardDelete}
+         idCard={currentIdCard}
+         />
+         <ImagePopup
+         isOpen={isImagePopupOpen}
+         onClose={closeAllPopups}
+         card={selectedCard}
+         />
+         <InfoTooltip
+         isOpen={isInfoTooltip}
+         onClose={closeAllPopups}
+         image={popupRegister.imagePopup}
+         text={popupRegister.textPopup}
+         />
 
       </div>
    </CurrentUserContext.Provider>
@@ -191,11 +273,3 @@ function App() {
 }
 
 export default App;
-
-
-
-
-
-
-
-

@@ -12,7 +12,7 @@ function InputPopup(props) {
                 value={props.value}
                 onChange={props.onChange}
                 required />
-            <span className={`popup__input-error ${props.id}-error`}></span>
+         <span className={`popup__input-error ${props.id}-error ${!props.isValid ? 'popup__input-error_type_visible' : ''}`}>{props.error}</span>
       </label>
    );
 }

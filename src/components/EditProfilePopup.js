@@ -2,43 +2,42 @@ import PopupWithForm from "./PopupWithForm";
 import InputPopup from "./InputPopup";
 import React from "react";
 import {CurrentUserContext} from "../contexts/CurrentUserContext";
+import {useFormAndValidation} from "../hooks/useFormAndValidation";
 
 function EditProfilePopup(props) {
 
    const currentUser = React.useContext(CurrentUserContext)
-   const [name, setName] = React.useState("")
-   const [description, setDescription] = React.useState("")
+
+   const {values, handleChange, errors, isValid, resetForm, setValues, setIsValid} = useFormAndValidation({})
 
    React.useEffect(() => {
-      setName(`${currentUser.name}`);
-      setDescription(`${currentUser.about}`);
+      setValues({
+         name: currentUser.name,
+         aboutUser: currentUser.about
+      })
    }, [props.isOpen]);
-
-   function handleChangeName(e) {
-      setName(e.target.value)
-   }
-
-   function handleChangeDescription(e) {
-      setDescription(e.target.value)
-   }
 
    function handleSubmit(e) {
       e.preventDefault();
 
       props.onUpdateUser({
-         name,
-         about: description,
+         name: values.name,
+         about: values.aboutUser,
       });
+
+      resetForm()
    }
 
    return (
    <PopupWithForm
       name="user-title"
       title="Редактировать профиль"
-      button={<button className="popup__button" type="submit">Сохранить</button>}
+      nameButton={'Сохранить'}
       isOpen={props.isOpen}
       onClose={props.onClose}
-      onSubmit={handleSubmit}>
+      onSubmit={handleSubmit}
+      isValid={isValid}
+      >
          <InputPopup
             className="field_name"
             type="text"
@@ -47,8 +46,10 @@ function EditProfilePopup(props) {
             minLength="2"
             maxLength="40"
             placeholder="Имя фамилия"
-            value={name}
-            onChange={handleChangeName}
+            value={values.name}
+            onChange={handleChange}
+            error={errors.name}
+            isValid={isValid}
          />
          <InputPopup
             className="field_job"
@@ -58,8 +59,10 @@ function EditProfilePopup(props) {
             minLength="2"
             maxLength="200"
             placeholder="Кем работаете"
-            value={description}
-            onChange={handleChangeDescription}
+            value={values.aboutUser}
+            onChange={handleChange}
+            error={errors.aboutUser}
+            isValid={isValid}
          />
    </PopupWithForm>
    );

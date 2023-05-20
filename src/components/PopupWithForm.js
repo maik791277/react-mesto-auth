@@ -1,16 +1,20 @@
+import Popup from "./Popup";
+import React from "react";
+
 function PopupWithForm(props) {
 
+
    return(
-      <section className={`popup popup_type_${props.name} ${props.isOpen ? 'popup_opened' : ''}`}>
-         <form className={`popup__form ${props.classNameForm}`} name={props.name} onSubmit={props.onSubmit}>
-            <button className="popup__close-button" type="button" onClick={props.onClose} />
-            <h2 className="popup__title">{props.title}</h2>
-               {props.children}
-               {props.button}
-         </form>
-      </section>
+   <Popup isOpen={props.isOpen} name={props.name} onClose={props.onClose} popupContainer={'popup__container'} popupContainerAdd={props.popupContainerForm}>
+      <form className="popup__form" name={props.name} onSubmit={props.onSubmit} noValidate>
+         <h2 className="popup__title">{props.title}</h2>
+         {props.children}
+         <button className={`popup__button ${!props.isValid ? 'popup__button_type_error' : ''}`} type="submit">{props.nameButton}</button>
+      </form>
+   </Popup>
    );
 }
 // popup__button_type_error это класс для деактивация кнопки сабмит на будущие
 
 export default PopupWithForm;
+

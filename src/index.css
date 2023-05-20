@@ -47,6 +47,7 @@
 /* popup */
 @import "./blocks/popup/popup.css";
 @import "./blocks/popup/__form/popup__form.css";
+@import "./blocks/popup/__container/popup__container.css";
 @import "./blocks/popup/__form/_image-user/popup__form_image-user.css";
 @import "./blocks/popup/__close-button/popup__close-button.css";
 @import "./blocks/popup/__title/popup__title.css";

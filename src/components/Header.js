@@ -32,7 +32,6 @@ function Header (props) {
          setUnknown(false)
       }
    }
-   console.log(location.pathname)
 
    useEffect(() => {
       locationPage()

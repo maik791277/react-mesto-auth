@@ -1,74 +1,30 @@
 import React, {useState} from "react";
-import {Link, useNavigate} from "react-router-dom";
-import Header from "../Header";
+import { Link } from "react-router-dom";
 import InputPopup from "../InputPopup";
-import InfoTooltip from "../InfoTooltip";
-import * as mestoAuth from "../../utils/mestoAuth"
-import something from "../../images/Union (1).png"
 import somethingIsWrong from "../../images/something-wrong.png"
-
+import {useFormAndValidation} from "../../hooks/useFormAndValidation";
 
 function Register(props) {
 
-   const [formValue, setFormValue] = useState({
-      email: '',
-      password: '',
-      confirmPassword: ''
-   })
-   const [popupRegister, setPopupRegister] = useState({
-      textPopup: '',
-      imagePopup: ''
-   })
-   
-   console.log(formValue)
-   const [isInfoTooltip, setIsInfoTooltip] = useState(false)
-   const navigate = useNavigate();
-
-   function closeInfoTooltipClick() {
-      setIsInfoTooltip(false)
-   }
-
-   function handleChange(e) {
-      const {name, value} = e.target;
-      setFormValue({
-         ...formValue,
-         [name]: value
-      });
-   }
+   const {values, handleChange, errors, isValid, resetForm, setValues, setIsValid} = useFormAndValidation({})
 
    function handleSubmit(e) {
       e.preventDefault();
 
-      if (formValue.password !== formValue.confirmPassword) {
-         setPopupRegister({
+      if (values.password !== values.confirmPassword) {
+         props.popupRegister({
             textPopup: 'Что-то пошло не так! Пароли не совпадают.',
             imagePopup: somethingIsWrong
          })
 
-         setIsInfoTooltip(true)
+         props.isInfoTooltip(true)
 
-      } else {
-         const {email, password} = formValue;
+      }else {
+         const {email, password} = values;
+         props.register(email, password)
 
-         mestoAuth.register(email, password)
-         .then(() => {
-            setPopupRegister({
-               textPopup: `Вы успешно зарегистрировались!`,
-               imagePopup: something
-            })
-            setIsInfoTooltip(true)
-            setTimeout(navigate, 3000, '/sign-in')
-         })
-         .catch((err) => {
-            setPopupRegister({
-               textPopup: `${err} Что-то пошло не так! Возможно у вас уже есть аккаунт. Попробуйте ещё раз.`,
-               imagePopup: somethingIsWrong
-            })
-            setIsInfoTooltip(true)
-         });
       }
    }
-
 
    return (
    <>
@@ -85,8 +41,10 @@ function Register(props) {
                minLength="2"
                maxLength="40"
                placeholder="Email"
-               // value={name}
+               value={useState.value}
                onChange={handleChange}
+               error={errors.email}
+               isValid={isValid}
                />
                <InputPopup
                className="register_password"
@@ -97,7 +55,10 @@ function Register(props) {
                minLength="2"
                maxLength="40"
                placeholder="Пароль"
+               value={useState.value}
                onChange={handleChange}
+               error={errors.password}
+               isValid={isValid}
                />
                <InputPopup
                className="register_confirmPassword"
@@ -108,14 +69,16 @@ function Register(props) {
                minLength="2"
                maxLength="40"
                placeholder="Повторите пароль"
+               value={useState.value}
                onChange={handleChange}
+               error={errors.confirmPassword}
+               isValid={isValid}
                />
-               <button className="authentication__button" type="submit">Зарегистрироваться</button>
+               <button className={`authentication__button ${!isValid ? 'popup__button_type_error' : ''}`} type="submit" >Войти</button>
                <h2 className="authentication__text">Уже зарегистрированы? <Link to="/sign-in">Войти</Link></h2>
             </form>
          </main>
       </div>
-      <InfoTooltip isOpen={isInfoTooltip} onClose={closeInfoTooltipClick} image={popupRegister.imagePopup} text={popupRegister.textPopup} />
    </>
    );
 }
